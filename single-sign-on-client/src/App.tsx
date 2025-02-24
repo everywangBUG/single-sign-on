@@ -1,9 +1,11 @@
 // App.tsx
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router';
 
 const App = () => {
   const [username, setUserName] = useState<{ username?: string; password?: string } | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -16,16 +18,16 @@ const App = () => {
             setUserName(response.data.username);
           } else {
             localStorage.removeItem('token');
-            window.location.href = 'http://localhost:5173/login';
+            navigate('/login');
           }
         })
         .catch(error => {
           console.error('Token validation failed:', error);
           localStorage.removeItem('token');
-          window.location.href = 'http://localhost:5173/login';
+          navigate('/login');
         });
     } else {
-      // window.location.href = 'http://localhost:5173/login'; 
+      navigate('/login');
     }
   }, []);
 
