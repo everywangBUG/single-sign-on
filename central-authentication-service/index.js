@@ -23,7 +23,7 @@ app.use((req, res, next) => {
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   // 验证用户名和密码
-  if (username === 'admin' && password === '111') {
+  if (username === 'admin' && password === 'password') {
     // 签发token
     const token = jwt.sign({ username }, SECRET_KE, { expiresIn: '1h' });
     res.json({ token});
@@ -43,9 +43,14 @@ app.post('/validate', (req, res) => {
   }
 })
 
+
+const blackList = new Set();
 // 注销功能
 app.post('/logout', (req, res) => {
   const { token } = req.body;
+  blackList.add(token);
+  console.log(blackList, '令牌黑名单')
+  res.send('注销成功');
 })
 
 app.listen(3000, () => {
