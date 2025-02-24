@@ -2,7 +2,8 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const app = express();
 
-const SECRET_KE = 'my-secret-key';
+const SECRET_KEY = 'my-secret-key';
+const REFRESH_SECRET_KEY = 'refresh-secret-key';
 
 app.use(express.json());
 
@@ -25,20 +26,68 @@ app.post('/login', (req, res) => {
   // 验证用户名和密码
   if (username === 'admin' && password === 'password') {
     // 签发token
-    const token = jwt.sign({ username }, SECRET_KE, { expiresIn: '1h' });
-    res.json({ token});
+    const token = jwt.sign({ username }, SECRET_KEY, { expiresIn: '15m' });
+    const refreshToken = jwt.sign({ username }, REFRESH_SECRET_KEY, { expiresIn: '7d' });
+    res.json({ 
+      access_token: token,
+      expires_in: 30, // token过期时间15分钟
+      refresh_token: refreshToken
+    });
   } else {
     res.status(401).send('用户名或密码错误');
+  }
+})
+
+app.post('/refresh', (req, res) => {
+  const { refresh_token } = req.body;
+  try {
+    const decode = jwt.verify(refresh_token, REFRESH_SECRET_KEY);
+    const token = jwt.sign({ username: decode.username }, SECRET_KEY, { expiresIn: '15m' });
+    res.json({ access_token: token });
+  } catch (error) {
+    res.status(401).send('refresh_token验证失败');
   }
 })
 
 // 验证token
 app.post('/validate', (req, res) => {
   const { token } = req.body;
+  if (!token) {
+    return res.status(401).send('token is missing');
+  }
   try {
-    const decode = jwt.verify(token, SECRET_KE);
+    const decode = jwt.verify(token, SECRET_KEY);
     res.json(decode);
   } catch (error) {
+    res.status(401).send('token验证失败');
+  }
+})
+
+app.get('/get/list', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send('Authorization header is missing');
+  }
+
+  console.log(authHeader, 'authHeader')
+  const token = authHeader.split(' ')[1];
+  console.log(token, 'placeholder')
+  if (!token) {
+    return res.status(401).send('Token is missing');
+  }
+
+  if (blackList.has(token)) {
+    return res.status(401).send('token已注销');
+  }
+  // 模拟返回列表数据
+  try {
+    jwt.verify(token, SECRET_KEY);
+    res.json([
+      { id: 1, name: 'Item 1' },
+      { id: 2, name: 'Item 2' },
+      { id: 3, name: 'Item 3' },
+    ]);
+  } catch(error) {
     res.status(401).send('token验证失败');
   }
 })

@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from '../server/axios'
 import { FC } from 'react'
 import { useNavigate } from 'react-router';
 
@@ -11,7 +11,10 @@ export const Login: FC = () => {
     const username = formData.get('username') as string
     const password = formData.get('password') as string
     axios.post('http://localhost:3000/login', { username, password }).then((res) => {
-      localStorage.setItem('token', res.data.token)
+      // 存储access_token
+      localStorage.setItem('token', res.data.access_token)
+      // 存储刷新token
+      localStorage.setItem('refresh_token', res.data.refresh_token)
       navigate('/home')
     })
   }
